@@ -1,12 +1,27 @@
 import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { WeatherService } from './services/weather';
+import { FormsModule } from '@angular/forms';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [FormsModule, NgIf],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
 export class App {
-  protected readonly title = signal('weather');
+  city = signal('Riyadh');
+  weatherData = signal<any>(null);
+
+  constructor(private weatherService: WeatherService) {}
+
+  getWeather() {
+    this.weatherService.getWeather(this.city()).subscribe(data => {
+      this.weatherData.set(data);
+    }, err => {
+      this.weatherData.set(null);
+      alert('لم يتم العثور على المدينة');
+    });
+  }
 }
