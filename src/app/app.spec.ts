@@ -1,23 +1,44 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { App } from './app';
+import { WeatherService } from './services/weather';
+import { of } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { NgIf } from '@angular/common';
 
-describe('App', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [App],
+describe('App Component', () => {
+  let component: App;
+  let fixture: ComponentFixture<App>;
+  let mockWeatherService: any;
+
+  beforeEach(() => {
+    mockWeatherService = {
+      getWeather: jasmine.createSpy('getWeather').and.returnValue(
+        of({
+          name: 'Riyadh',
+          weather: [{ description: 'صافي', icon: '01d' }],
+          main: { temp: 30, humidity: 20 },
+          wind: { speed: 5 }
+        })
+      )
+    };
+
+    TestBed.configureTestingModule({
+      imports: [App, FormsModule, HttpClientTestingModule, NgIf],
+      providers: [
+        { provide: WeatherService, useValue: mockWeatherService }
+      ]
     }).compileComponents();
+
+    fixture = TestBed.createComponent(App);
+    component = fixture.componentInstance;
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
+  it('should fetch weather on getWeather()', () => {
+    component.city.set('Riyadh');
+    component.getWeather();
 
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(App);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, weather');
+    expect(mockWeatherService.getWeather).toHaveBeenCalledWith('Riyadh');
+    expect(component.weatherData().name).toBe('Riyadh');
   });
 });
